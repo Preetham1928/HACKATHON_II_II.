@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PII Detective - Document Scanner</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            width: 85%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            margin-left: 10px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        nav ul li {
+            margin-right: 1.5rem;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #3498db;
+        }
+
+        .hero {
+            background-color: #3498db;
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #2c3e50;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #1a252f;
+        }
+
+        .features {
+            padding: 4rem 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title h2 {
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+
+        .scanner {
+            padding: 4rem 0;
+            background-color: #ecf0f1;
+        }
+
+        .scanner-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            border: 2px dashed #bdc3c7;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: #3498db;
+        }
+
+        .file-upload p {
+            margin-top: 1rem;
+            color: #7f8c8d;
+        }
+
+        .file-upload-icon {
+            font-size: 3rem;
+            color: #3498db;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .scan-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .scan-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .results {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .results h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .result-item {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .result-item.warning {
+            border-left-color: #e74c3c;
+        }
+
+        .redact-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .redact-btn:hover {
+            background-color: #c0392b;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: white;
+            margin: 0 1rem;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+            }
+
+            .hero h2 {
+                font-size: 2rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            nav ul li {
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>PII Detective</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#scanner">Scanner</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Protect Your Identity, Secure Your Data</h2>
+            <p>Our advanced PII detection system identifies sensitive government-issued personal information in your documents and helps you secure them.</p>
+            <a href="#scanner" class="btn">Scan Your Document Now</a>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Key Features</h2>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Aadhaar Card Detection</h3>
+                    <p>Accurately identifies Aadhaar numbers and information within documents and provides redaction options.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>PAN Card Verification</h3>
+                    <p>Detects PAN card information including number, name, and date of birth to prevent identity theft.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Driving License Protection</h3>
+                    <p>Scans for driving license numbers and associated personal data to protect your identity.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Smart Redaction</h3>
+                    <p>Automatically masks detected PII with one-click redaction to keep your information safe.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Multiple File Support</h3>
+                    <p>Works with PDF, images, Word documents, and more to provide comprehensive protection.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Privacy First</h3>
+                    <p>All processing happens on your device - we never store or transmit your sensitive information.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="scanner" class="scanner">
+        <div class="container">
+            <div class="section-title">
+                <h2>PII Document Scanner</h2>
+            </div>
+            <div class="scanner-container">
+                <div class="file-upload" id="dropArea">
+                    <div class="file-upload-icon">📄</div>
+                    <p>Drag & Drop your file here or click to browse</p>
+                    <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                </div>
+                <button id="scanBtn" class="scan-btn">Scan for PII</button>
+                <div class="results" id="resultsContainer">
+                    <h3>Scan Results</h3>
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Us</a>
+                <a href="#">FAQ</a>
+            </div>
+            <p>&copy; 2025 PII Detective. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // DOM elements
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const scanBtn = document.getElementById('scanBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsContent = document.getElementById('resultsContent');
+
+        // Sample PII patterns to detect (in a real app, these would be more robust)
+        const piiPatterns = {
+            aadhaar: /\b[2-9]{1}[0-9]{3}\s[0-9]{4}\s[0-9]{4}\b/g,  // Format: XXXX XXXX XXXX
+            pan: /\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b/g,  // Format: ABCDE1234F
+            drivingLicense: /\b[A-Z]{2}[0-9]{2}[0-9]{4}[0-9]{7}\b/g,  // Sample format
+            mobileNumber: /\b[6-9]{1}[0-9]{9}\b/g,  // Indian mobile format
+            email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g
+        };
+
+        // File upload via click
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File upload via drag & drop
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.style.borderColor = '#3498db';
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.style.borderColor = '#bdc3c7';
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.style.borderColor = '#bdc3c7';
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                // Update UI to show file was selected
+                dropArea.innerHTML = `
+                    <div class="file-upload-icon">✅</div>
+                    <p>${e.dataTransfer.files[0].name}</p>
+                `;
+            }
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                // Update UI to show file was selected
+                dropArea.innerHTML = `
+                    <div class="file-upload-icon">✅</div>
+                    <p>${fileInput.files[0].name}</p>
+                `;
+            }
+        });
+
+        // Scan button click handler
+        scanBtn.addEventListener('click', () => {
+            if (!fileInput.files.length) {
+                alert('Please select a file first');
+                return;
+            }
+
+            // In a real application, we'd process the actual file
+            // Here we're simulating finding PII in a document
+            setTimeout(() => {
+                // Show results section
+                resultsContainer.style.display = 'block';
+                
+                // Simulate scan results
+                const file = fileInput.files[0];
+                
+                // This is a simulation - in a real app we'd do actual file processing
+                simulatePIIDetection(file);
+                
+                // Scroll to results
+                resultsContainer.scrollIntoView({ behavior: 'smooth' });
+            }, 1500); // Simulate processing time
+        });
+
+        // Simulate PII detection in files
+        function simulatePIIDetection(file) {
+            resultsContent.innerHTML = ''; // Clear previous results
+            
+            // This is where we'd actually analyze the file
+            // Instead, we'll simulate finding some PII based on file type
+            
+            // Simulate results based on file extension
+            const fileName = file.name.toLowerCase();
+            
+            if (fileName.endsWith('.pdf') || fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+                // Text document simulation
+                addResultItem('Aadhaar Number', 'Detected XXXX XXXX 5678 on page 2', true);
+                addResultItem('PAN Card Number', 'Detected ABCPK7890H on page 1', true);
+                addResultItem('Email Address', 'Detected user@example.com throughout document', false);
+            } 
+            else if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png')) {
+                // Image simulation
+                addResultItem('Driving License', 'Detected license number KA0120120012345', true);
+                addResultItem('Mobile Number', 'Detected 9876543210', false);
+            }
+            else {
+                // Other file types
+                addResultItem('No Issues Found', 'No government-issued PII detected in this file', false);
+            }
+            
+            // Add general advice
+            const adviceDiv = document.createElement('div');
+            adviceDiv.className = 'result-item';
+            adviceDiv.innerHTML = `
+                <h4>Recommendation:</h4>
+                <p>We recommend redacting the highlighted government-issued identifiers before sharing this document.</p>
+            `;
+            resultsContent.appendChild(adviceDiv);
+        }
+
+        // Add a result item to the results container
+        function addResultItem(title, description, isWarning) {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item' + (isWarning ? ' warning' : '');
+            
+            resultItem.innerHTML = `
+                <h4>${title}</h4>
+                <p>${description}</p>
+                ${isWarning ? '<button class="redact-btn">Redact</button>' : ''}
+            `;
+            
+            resultsContent.appendChild(resultItem);
+            
+            // Add redaction functionality
+            if (isWarning) {
+                const redactBtn = resultItem.querySelector('.redact-btn');
+                redactBtn.addEventListener('click', function() {
+                    // In a real app, this would perform actual redaction
+                    this.innerText = 'Redacted';
+                    this.disabled = true;
+                    this.style.backgroundColor = '#7f8c8d';
+                    
+                    // Update the description to show redaction
+                    const descriptionElement = this.previousElementSibling;
+                    descriptionElement.innerHTML = descriptionElement.innerHTML.replace(/Detected (.*?)(?= on|$)/, 'Redacted: ********');
+                });
+            }
+        }
+
+        // For the sake of providing a working demo, add some event handlers for the redact buttons
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.className.includes('redact-btn')) {
+                // Handled directly in the addResultItem function
+            }
+        });
+    </script>
+</body>
+</html>
